@@ -68,7 +68,12 @@ or, on older versions:
 - **Settings:** `settings.json` in the `_paperlens` folder inside your papers folder (and a note of its location in Claude's memory if you choose "remember").
 - **Paper Reader:** a private artifact in your own Claude account. Your questions and Claude's answers are stored in that artifact's own storage; it stays private unless you share it. Translate uses your Claude account directly from the page and saves nothing.
 - **Code:** the authors' repositories are read, never run. Paper2Agent pipelines run only when you ask.
-- No data is sent to the author of this plugin.
+- **Services the plugin contacts** (all public, read-only, through your own browser or Claude's web tools; no account of the plugin author is involved):
+  - the paper's publisher site (e.g. nature.com, cell.com, science.org, biorxiv.org) and its file host, to read the article page and download supplements you approved;
+  - Google Scholar, Europe PMC, OpenAlex and Crossref, to look up citation counts, DOIs and references;
+  - GitHub, to read the authors' code repositories;
+  - cdnjs.cloudflare.com and fonts.googleapis.com, from which the Paper Reader page loads pdf.js, marked, DOMPurify and its fonts.
+- No data is sent to the author of this plugin, and nothing is retained anywhere except in your own folders and your own Claude account.
 
 ## Files
 
