@@ -283,7 +283,7 @@ button.del.armed{background:#f8c9bf;color:#000;border-color:#c0392b;font-weight:
 const CFG = JSON.parse(document.getElementById('cfg').textContent);
 const $ = s => document.querySelector(s);
 const scrollEl = $('#scroll'), pagesEl = $('#pages');
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 $('#ptitle').textContent = CFG.short || CFG.title;
 
 function fmtWhen(iso) {

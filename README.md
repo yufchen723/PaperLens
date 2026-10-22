@@ -78,11 +78,10 @@ or, on older versions:
 | `skills/paperlens/reader/reader_template.html` | the Paper Reader page template |
 | `skills/paperlens/reader/build_reader.py` | builds a reader for one paper (`--type`, `--add-tab`, `--research`, `--translate-to`; needs PyMuPDF) |
 | `skills/paperlens/reader/crop_cover.py` | crops the article header from a screenshot for the reader's cover |
-| `skills/paperlens/reader/pdf.worker.min.js` | pdf.js worker |
 
 ## Credits
 
-- [pdf.js](https://github.com/mozilla/pdf.js) 3.11.174 by Mozilla (Apache-2.0); `pdf.worker.min.js` is included unchanged. The reader also loads pdf.js, [marked](https://github.com/markedjs/marked) (MIT) and [DOMPurify](https://github.com/cure53/DOMPurify) (Apache-2.0 / MPL-2.0) from cdnjs.
+- The reader loads [pdf.js](https://github.com/mozilla/pdf.js) 3.11.174 (Mozilla, Apache-2.0), [marked](https://github.com/markedjs/marked) (MIT) and [DOMPurify](https://github.com/cure53/DOMPurify) (Apache-2.0 / MPL-2.0) from cdnjs; nothing is bundled.
 - The Google Scholar toolkit is adapted from [cookjohn/gs-skills](https://github.com/cookjohn/gs-skills) (MIT).
 - Code-to-tools pipelines come from [Paper2Agent](https://github.com/jmiao24/Paper2Agent) (Miao et al., *Nature* 2026), used only on request.
 

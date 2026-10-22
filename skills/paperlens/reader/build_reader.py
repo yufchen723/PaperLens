@@ -20,9 +20,9 @@ not the issue year. --research (from the PaperLens settings) adds a "For my rese
 --translate-to sets the Translate default (e.g. zh-Hans, es, ja); otherwise it follows the browser language. --cover is the crop of the article header from the publisher's page; it is shown
 above page 1 of the main text and links to --url.
 
-Writes <out>/main.pdf (+ extra1.pdf…, si.pdf, cover.png), <out>/index.html. Copy pdf.worker.min.js (pdfjs-dist 3.11.174,
-build/pdf.worker.min.js) next to them, then publish index.html with files main.pdf, extra*.pdf, si.pdf, cover.png,
-pdf.worker.min.js and capabilities {"db": {}, "user": {}, "sample": {}} (sample = the Translate button).
+Writes <out>/main.pdf (+ extra1.pdf…, si.pdf, cover.png), <out>/index.html. Publish index.html with files main.pdf,
+extra*.pdf, si.pdf, cover.png and capabilities {"db": {}, "user": {}, "sample": {}} (sample = the Translate button).
+pdf.js 3.11.174 and its worker load from cdnjs.
 """
 import argparse, json, os, re, shutil
 import pymupdf
