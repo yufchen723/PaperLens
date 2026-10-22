@@ -292,10 +292,10 @@ function fmtWhen(iso) {
   const p = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
-const NC_KEY = 'paperReader.notesCollapsed';
+const NC_STORE = 'paperReader.notesCollapsed';
 let collapsedNotes = new Set();
-try { collapsedNotes = new Set(JSON.parse(localStorage.getItem(NC_KEY) || '[]')); } catch (e) {}
-function saveCollapsed() { try { localStorage.setItem(NC_KEY, JSON.stringify([...collapsedNotes])); } catch (e) {} }
+try { collapsedNotes = new Set(JSON.parse(localStorage.getItem(NC_STORE) || '[]')); } catch (e) {}
+function saveCollapsed() { try { localStorage.setItem(NC_STORE, JSON.stringify([...collapsedNotes])); } catch (e) {} }
 function setCollapsed(card, on) {
   card.classList.toggle('collapsed', on);
   const b = card.querySelector('.tog'); if (b) { b.textContent = on ? '▸' : '▾'; b.setAttribute('aria-expanded', String(!on)); b.title = on ? 'Expand this note' : 'Collapse this note'; }
@@ -570,16 +570,16 @@ function applySummaryHighlights() {
 /* drawer */
 $('#drawerBtn').onclick = () => toggleDrawer();
 /* drawer width: drag the left edge; remembered on this computer */
-const DW_KEY = 'paperReader.drawerWidth';
+const DW_STORE = 'paperReader.drawerWidth';
 function setDrawerWidth(w) { if (w) document.documentElement.style.setProperty('--drawer-w', Math.round(w) + 'px'); else document.documentElement.style.removeProperty('--drawer-w'); }
-try { const w = parseInt(localStorage.getItem(DW_KEY) || '', 10); if (w >= 280) setDrawerWidth(w); } catch (e) {}
+try { const w = parseInt(localStorage.getItem(DW_STORE) || '', 10); if (w >= 280) setDrawerWidth(w); } catch (e) {}
 (() => {
   const g = $('#drawerGrip'), d = $('#drawer'); let id = null, sx = 0, sw = 0;
   g.addEventListener('pointerdown', e => { if (e.button !== 0) return; id = e.pointerId; sx = e.clientX; sw = d.getBoundingClientRect().width; d.classList.add('resizing'); try { g.setPointerCapture(id); } catch (err) {} e.preventDefault(); });
   g.addEventListener('pointermove', e => { if (id === null || e.pointerId !== id) return; const w = Math.max(280, Math.min(sw + (sx - e.clientX), innerWidth * 0.92)); setDrawerWidth(w); });
-  const end = e => { if (id === null || (e && e.pointerId !== id)) return; try { g.releasePointerCapture(id); } catch (err) {} id = null; d.classList.remove('resizing'); try { localStorage.setItem(DW_KEY, String(Math.round(d.getBoundingClientRect().width))); } catch (err) {} updatePageNo(); };
+  const end = e => { if (id === null || (e && e.pointerId !== id)) return; try { g.releasePointerCapture(id); } catch (err) {} id = null; d.classList.remove('resizing'); try { localStorage.setItem(DW_STORE, String(Math.round(d.getBoundingClientRect().width))); } catch (err) {} updatePageNo(); };
   g.addEventListener('pointerup', end); g.addEventListener('pointercancel', end);
-  g.addEventListener('dblclick', () => { setDrawerWidth(null); try { localStorage.removeItem(DW_KEY); } catch (err) {} });
+  g.addEventListener('dblclick', () => { setDrawerWidth(null); try { localStorage.removeItem(DW_STORE); } catch (err) {} });
 })();
 function toggleDrawer(force) {
   const open = force ?? !$('#drawer').classList.contains('open');
@@ -772,7 +772,7 @@ const LANGS = [
   ['sr','Serbian','Српски','sr-RS'], ['hr','Croatian','Hrvatski','hr-HR'], ['bg','Bulgarian','Български','bg-BG'], ['sk','Slovak','Slovenčina','sk-SK'],
   ['ca','Catalan','Català','ca-ES'], ['my','Burmese','မြန်မာ','my-MM'], ['km','Khmer','ខ្មែរ','km-KH'], ['am','Amharic','አማርኛ','am-ET']
 ];
-const LANG_KEY = 'paperReader.translateTo';
+const LANG_STORE = 'paperReader.translateTo';
 /* default target language: cfg.translate_to, else the browser's language (unless English), else Chinese (Simplified) */
 const defaultLang = () => {
   const ok = c => c && LANGS.some(l => l[0] === c) ? c : null;
@@ -787,11 +787,11 @@ const defaultLang = () => {
   return 'zh-Hans';
 };
 const tr = { sample: null, ctl: null, lang: defaultLang(), sel: null, off: false };
-try { const v = localStorage.getItem(LANG_KEY); if (v && LANGS.some(l => l[0] === v)) tr.lang = v; } catch (e) {}
+try { const v = localStorage.getItem(LANG_STORE); if (v && LANGS.some(l => l[0] === v)) tr.lang = v; } catch (e) {}
 const langSel = $('#trLang');
 LANGS.forEach(([code, en, native]) => { const o = document.createElement('option'); o.value = code; o.textContent = native === en ? en : `${native} · ${en}`; langSel.appendChild(o); });
 langSel.value = tr.lang;
-langSel.onchange = () => { tr.lang = langSel.value; try { localStorage.setItem(LANG_KEY, tr.lang); } catch (e) {} if (tr.sel && !$('#tr').hidden) runTranslate(); };
+langSel.onchange = () => { tr.lang = langSel.value; try { localStorage.setItem(LANG_STORE, tr.lang); } catch (e) {} if (tr.sel && !$('#tr').hidden) runTranslate(); };
 const langInfo = code => LANGS.find(l => l[0] === code) || [code, code, code, code];
 (async () => { try { tr.sample = window.claude?.use ? await window.claude.use('sample') : null; } catch (e) { tr.sample = null; } $('#trBtn').hidden = !tr.sample; })();
 
