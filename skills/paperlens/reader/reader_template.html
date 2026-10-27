@@ -171,7 +171,13 @@ button.del.armed{background:#f8c9bf;color:#000;border-color:#c0392b;font-weight:
   max-width:calc(100vw - 32px);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:9px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.3)}
 #toast button{border:0;background:transparent;color:var(--note);font-weight:600;cursor:pointer;padding:0}
 #loading{color:var(--muted);text-align:center;padding:40px 0}
-#summary{position:relative;max-width:780px;margin:0 auto;background:var(--panel);border:1px solid var(--rule);border-radius:10px;
+#sumWrap{position:relative;width:min(var(--sum-w,780px),100%);margin:0 auto}
+#sumWrap[hidden]{display:none}
+#sumGrip{position:absolute;top:0;bottom:0;right:-11px;width:12px;cursor:col-resize;z-index:2;touch-action:none}
+#sumGrip::after{content:'';position:absolute;left:5px;top:0;bottom:0;width:2px;background:transparent;transition:background .15s}
+#sumGrip:hover::after,#sumWrap.resizing #sumGrip::after{background:var(--accent)}
+#sumWrap.resizing{user-select:none;-webkit-user-select:none}
+#summary{position:relative;margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:10px;
   padding:22px max(18px,4%) 40px;font-size:calc(14.5px * var(--sum-scale,1));line-height:1.6;color:var(--fg)}
 #summary h1{font:600 1.35em/1.25 var(--f-title);text-wrap:balance;margin:0 0 .6em}
 #summary h2{font:600 1.12em/1.3 var(--f-title);margin:1.6em 0 .5em;padding-top:.6em;border-top:1px solid var(--rule)}
@@ -218,6 +224,12 @@ button.del.armed{background:#f8c9bf;color:#000;border-color:#c0392b;font-weight:
 #summary .stamp{font:500 11px var(--f-mono);color:var(--muted);margin:0 0 1em}
 #summary .hl-block{background:var(--note-soft);border-radius:3px}
 #summary .pin{left:-14px}
+/* collapsible panel-by-panel blocks in the Summary (her request 2026-10-23) */
+#summary details{margin:.5em 0 1.2em;border:1px solid var(--rule);border-radius:8px;background:var(--bg);padding:0 .9em}
+#summary details>summary{cursor:pointer;padding:.55em 0;font-size:.95em;color:var(--muted);list-style:revert}
+#summary details>summary:hover{color:var(--ink)}
+#summary details[open]>summary{border-bottom:1px solid var(--rule);margin-bottom:.5em}
+#summary details p,#summary details ul{margin:.4em 0}
 /* figures in the summary (Story by figure): click to enlarge (her request 2026-10-21) */
 #summary img{display:block;max-width:100%;height:auto;margin:12px auto 6px;border:1px solid var(--rule);border-radius:6px;background:#fff;cursor:zoom-in}
 #lightbox{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:16px;cursor:zoom-out}
@@ -240,7 +252,7 @@ button.del.armed{background:#f8c9bf;color:#000;border-color:#c0392b;font-weight:
   <button class="icon" id="drawerBtn" aria-expanded="false">Contents · Notes<span class="badge" id="ncount" hidden>0</span></button>
 </header>
 
-<div id="scroll"><div id="pages"><div id="loading">Loading the PDF…</div></div><article id="summary" hidden></article></div>
+<div id="scroll"><div id="pages"><div id="loading">Loading the PDF…</div></div><div id="sumWrap" hidden><article id="summary"></article><div id="sumGrip" title="Drag to change the width · double-click to reset" aria-hidden="true"></div></div></div>
 
 <aside id="drawer" aria-label="Contents and notes">
   <div id="drawerGrip" title="Drag to change the width · double-click to reset" aria-hidden="true"></div>
@@ -302,7 +314,7 @@ function setCollapsed(card, on) {
   if (on) collapsedNotes.add(card.dataset.id); else collapsedNotes.delete(card.dataset.id);
 }
 const state = { doc: CFG.docs[0].key, zoom: 1, pdfs: {}, shells: [], notes: [], sel: null, drawerTab: 'toc', view: 'pdf', summary: {}, sumScale: 1 };
-const sumEl = document.getElementById('summary');
+const sumEl = document.getElementById('summary'), sumWrap = document.getElementById('sumWrap');
 /* text tabs after the PDFs: from cfg.tabs (set by build_reader.py --type); kind "md" renders markdown, "timeline" the review timeline */
 const MD_DEFAULT_EMPTY = { summary: 'The summary appears here once Claude adds it to the reader.', links: 'The paper\u2019s links appear here once Claude adds them to the reader.' };
 const MD = (Array.isArray(CFG.tabs) && CFG.tabs.length ? CFG.tabs : [{ key: 'summary', label: 'Summary' }, { key: 'links', label: 'Links' }])
@@ -441,7 +453,7 @@ let rT; addEventListener('resize', () => { clearTimeout(rT); if (state.view === 
 /* summary view */
 function showView(v) {
   state.view = v;
-  pagesEl.hidden = v !== 'pdf'; sumEl.hidden = v !== 'md';
+  pagesEl.hidden = v !== 'pdf'; sumWrap.hidden = v !== 'md';
   document.querySelectorAll('#docSeg button').forEach(b => b.setAttribute('aria-pressed', v === 'pdf' ? b.dataset.key === state.doc : b.dataset.md === state.mdKey));
 }
 function openMd(key, noteId) {
@@ -566,6 +578,38 @@ function applySummaryHighlights() {
   });
   if (window.CSS && CSS.highlights && window.Highlight) { CSS.highlights.delete('qa-hl'); if (ranges.length) CSS.highlights.set('qa-hl', new Highlight(...ranges)); }
 }
+
+/* text-column width: drag the right edge of Summary / Links / any text tab; remembered on this computer */
+const SW_STORE = 'paperReader.summaryWidth', SW_MIN = 420, SW_DEF = 780;
+function swMax() { const cs = getComputedStyle(scrollEl); return Math.max(SW_MIN, scrollEl.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)); }
+function setSumWidth(w) { if (w) document.documentElement.style.setProperty('--sum-w', Math.round(w) + 'px'); else document.documentElement.style.removeProperty('--sum-w'); }
+try { const w = parseInt(localStorage.getItem(SW_STORE) || '', 10); if (w >= SW_MIN) setSumWidth(w); } catch (e) {}
+/* keep the line at the top of the view in place while the text reflows */
+function sumAnchor() {
+  const sr = scrollEl.getBoundingClientRect(), cr = sumEl.getBoundingClientRect();
+  let el = null;
+  for (let y = Math.max(sr.top, cr.top) + 8; !el && y < Math.min(sr.bottom, cr.bottom); y += 16) {   /* the first line of text below the top bar */
+    const hit = document.elementFromPoint(cr.left + Math.min(60, cr.width / 4), y);
+    if (hit && hit !== sumEl && sumEl.contains(hit)) el = hit.closest('h1,h2,h3,p,li,tr,pre,blockquote,img,summary,.tl-item') || hit;
+  }
+  return el ? { el, off: el.getBoundingClientRect().top - sr.top } : null;
+}
+function keepAnchor(a) { if (!a || !a.el.isConnected) return; scrollEl.scrollTop += (a.el.getBoundingClientRect().top - scrollEl.getBoundingClientRect().top) - a.off; }
+let swRaf = 0;
+function afterSumResize(a) { cancelAnimationFrame(swRaf); swRaf = requestAnimationFrame(() => { keepAnchor(a); applySummaryHighlights(); updatePageNo(); }); }
+(() => {
+  const g = $('#sumGrip'); let id = null, sx = 0, sw = 0, anchor = null;
+  g.addEventListener('pointerdown', e => { if (e.button !== 0) return; id = e.pointerId; sx = e.clientX; sw = sumWrap.getBoundingClientRect().width; anchor = sumAnchor();
+    sumWrap.classList.add('resizing'); hidePop(); try { g.setPointerCapture(id); } catch (err) {} e.preventDefault(); });
+  /* the column is centred, so both edges move: twice the pointer's travel keeps the right edge under the pointer */
+  g.addEventListener('pointermove', e => { if (id === null || e.pointerId !== id) return; setSumWidth(Math.max(SW_MIN, Math.min(sw + 2 * (e.clientX - sx), swMax()))); afterSumResize(anchor); });
+  const end = e => { if (id === null || (e && e.pointerId !== id)) return; try { g.releasePointerCapture(id); } catch (err) {} id = null; sumWrap.classList.remove('resizing');
+    try { localStorage.setItem(SW_STORE, String(Math.round(sumWrap.getBoundingClientRect().width))); } catch (err) {} afterSumResize(anchor); };
+  g.addEventListener('pointerup', end); g.addEventListener('pointercancel', end);
+  g.addEventListener('dblclick', () => { const a = sumAnchor(); setSumWidth(null); try { localStorage.removeItem(SW_STORE); } catch (err) {} afterSumResize(a); });
+  /* a window resize also reflows the column: re-place the pins */
+  let rq; addEventListener('resize', () => { if (state.view !== 'md') return; clearTimeout(rq); rq = setTimeout(() => { applySummaryHighlights(); updatePageNo(); }, 150); });
+})();
 
 /* drawer */
 $('#drawerBtn').onclick = () => toggleDrawer();

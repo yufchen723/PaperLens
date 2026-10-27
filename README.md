@@ -19,7 +19,7 @@ Read a research paper end to end with Claude. Give it a title, DOI or link; Pape
   | D · Review | reviews and perspectives | **Timeline**: every cited paper by year, key papers first |
 
   Every summary covers citations and the authors' earlier work, the technology, the logic of the paper, the main findings with figure panels, the story figure by figure, the exact parameters, what the reviewers attacked, and the paper in plain words. If you give your research direction, it also explains how to apply the paper to your work.
-- **A Paper Reader** (a private web page in your Claude account): the real PDF pages with selectable text, the summary and the other tabs, a contents drawer, and two buttons on any selection:
+- **A Paper Reader** (a private web page in your Claude account): the real PDF pages with selectable text, the summary and the other tabs (with a text column you can widen by dragging its edge), a contents drawer, and two buttons on any selection:
   - **Ask Claude** saves your question on the page; say "go" in the chat and Claude answers every waiting question there and on the page.
   - **Translate** answers instantly in 50 languages, with pronunciation and meanings for single words.
 - **On request:** a read-only walk through the authors' code (what they really ran, with exact parameters), a scan of related literature, and Google Scholar search, cited-by tracking and export to Zotero.
