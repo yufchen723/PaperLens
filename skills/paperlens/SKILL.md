@@ -223,6 +223,7 @@ Style inside summary.md: compact, answer-first, technical terms followed by a pl
 - Sub-parts are `###` headings (Citations / Authors and lineage / Institution, the Technology groups, Fig. 1 / Fig. 2 in the story).
 - Short bullets (≤ 2–3 lines each) or tables, not long paragraphs. Bold only key numbers and names.
 - Sections added later (deep dives answering questions, corrections) go at the end, after Sources, each with a `---` and `## Deep dive: <topic>`.
+- The only raw HTML allowed in summary.md is the collapsed `<details>` panel-by-panel block under each figure (below).
 
 The reader's Contents drawer lists these headings, so they double as its navigation. **Type A (omics / data-driven) uses these parts in this order** (Frameworks B–D after the template; the research part only when a research direction is set):
 
@@ -311,8 +312,25 @@ Extended Data / Supplementary panels when they carry a claim>
 
 *Figure and legend reproduced from <First author> et al., <Journal> <vol>, <pages> (<year>), <licence>. Click the figure in the reader to enlarge.*
 
+<details>
+<summary><b>Panel by panel</b> — material · method · result · evidence level</summary>
+
+**Fig. 1a — <what the panel shows, 3–6 words>**
+- Material: <samples, cells, cohort, n; external dataset + ref. number when not the paper's own>
+- Method (Methods '<section name>'): <numbered steps with the exact tools, parameters, thresholds and the statistical test>
+- Result: <what the panel shows, key numbers in bold, P / FDR / effect size>
+- Evidence level: <descriptive / association / re-analysis of external data / orthogonal validation / perturbation; n, caveats, misprints>
+
+**Fig. 1b — …**
+- Material: …
+- Method: …
+- Result: …
+- Evidence level: …
+
+</details>
+
 ### Fig. 2 — …
-(every main figure: explanation, figure crop, legend, credit line)
+(every main figure: explanation, figure crop, legend, credit line, then the collapsed panel-by-panel block)
 
 ---
 
@@ -370,7 +388,7 @@ Problem → Solution (a plain-language analogy) → Results (the quantitative on
 4. `## Key assays and reagents`: table | Assay | What it measures (plain words) | Readout / quantification | Used in |; then `### Quantification and statistics` (software, tests, n definition: animals vs cells vs fields, blinding, randomisation).
 5. `## The experimental argument`: the claim chain, 4–8 numbered claims; each = claim → experiment → key control → result (number) → **evidence level** [correlation / necessity (loss-of-function) / sufficiency (gain-of-function) / rescue / in vivo / human tissue] (figure panels). Say which link in the chain is weakest.
 6. `## Main findings`: as type A, each with its evidence level.
-7. `## The story by figure`: as type A.
+7. `## The story by figure`: as type A (crop + verbatim legend when CC licensed, then the collapsed panel-by-panel block).
 8. `## The exact protocol`: table | Step | Condition | of what matters for repeating it: doses and timings, antibodies (target, clone, catalogue no., dilution), sgRNA/shRNA/primer IDs, imaging settings, inclusion/exclusion, statistical test per figure. Cite the Methods subsection.
 9. `## What the reviewers attacked`: as type A (wet-lab reviewers usually ask for a second model, rescue, in vivo or human validation).
 10. `## Applying it to your research` (only with a research direction): which part of the mechanism the user could test or look for in their system, what would count as support versus contradiction, what their data can and cannot show; then **Relevance to your research**.
@@ -386,7 +404,7 @@ Problem → Solution (a plain-language analogy) → Results (the quantitative on
 4. `## How it works`: the architecture or algorithm in 4–8 bullets, inputs and outputs with their shapes/formats, the loss or objective, each with a plain-language translation; a small inline text diagram only when it helps.
 5. `## Training and data`: training / reference datasets (table as in type A part 4), preprocessing, splits, the headline hyperparameters; the full list lives in the Parameters & training tab.
 6. `## Benchmarks`: table | Task | Datasets | Metric | Competitors | Result | Fair? | (same data splits, defaults vs tuned competitors, who ran the competitors); then 2–3 bullets on the strongest and weakest results.
-7. `## The story by figure`: as type A.
+7. `## The story by figure`: as type A (crop + verbatim legend when CC licensed, then the collapsed panel-by-panel block).
 8. `## Software`: package name, language, install command, version used in the paper, licence, dependencies, GPU/CPU needs and runtime, docs and tutorial links, Paper2Agent MCP if hosted; read from the README and docs (Step 7A rules: read only, never run).
 9. `## What the reviewers attacked`: as type A.
 10. `## Applying it to your research` (only with a research direction): can it take the user's data (input format, modality, resolution, sample size), what to change (parameters from the Parameters tab), what to benchmark it against, failure modes to expect; then **Relevance to your research**.
@@ -401,7 +419,7 @@ Problem → Solution (a plain-language analogy) → Results (the quantitative on
 1. `## 1 · In brief`: two sentences (scope; the review's main thesis or message).
 2. `## 2 · Citations, authors and institution`: as type A, plus the authors' own primary papers in this field.
 3. `## 3 · Scope and structure`: table | Review section | The question it answers | Refs cited (n) | Key figure/box |, one row per top-level section in the review's order.
-4. `## 4 · <first review section's title>` … one numbered `##` part per top-level review section, in order, each with 3–6 bullets of the section's key points, the key papers it rests on (Author year, linked) and any debate or conflicting evidence it names; the review's figures and boxes go in the part they belong to (crop + verbatim legend when CC licensed, as in type A).
+4. `## 4 · <first review section's title>` … one numbered `##` part per top-level review section, in order, each with 3–6 bullets of the section's key points, the key papers it rests on (Author year, linked) and any debate or conflicting evidence it names; the review's figures and boxes go in the part they belong to (crop + verbatim legend when CC licensed, then the collapsed panel-by-panel block, as in type A).
 5. Then, continuing the numbering: `## <n> · Open questions and future directions` (as the authors list them, plus gaps you see), `## <n> · Key papers to read next` (≤ 10, one line each on why; all are in the Timeline tab), `## <n> · Applying it to your research` (only with a research direction), `## <n> · In plain words`, `## <n> · Folder and access`.
 No "What the reviewers attacked" unless a peer review file exists. Build the reader **without `--si`** when the review has no supplementary PDF.
 
@@ -411,6 +429,12 @@ No "What the reviewers attacked" unless a peer review file exists. Build the rea
 3. **Fields per item:** `ref` (number in the review), `year`, `date` (YYYY-MM when known, for ordering within a year), `authors` ("First et al."), `title`, `journal`, `doi`, `url` (optional; default `https://doi.org/<doi>`), `tag` (one of Landmark · Method · Tool · Dataset/Atlas · Mechanism · Clinical · Review), `role` (one sentence, in English: what this paper contributes to the review's argument, from the sentence that cites it; ≤ 25 words, ≤ 12 for non-key papers if the list is long), `sections`, `pages_in_review`, `key` (true or false).
 4. **Key papers (≤ 30, ordered by importance in the JSON):** the ones the review discusses in depth (several sentences, a figure or box, cited in more than one section), the landmarks a section is built on, and the newest papers that changed the field. The reader keeps at most the first 30 marked `key`.
 5. **Write** `timeline.json` = `{"title": "Timeline — papers cited in <First author> et al. <year>", "items": [...]}` into the paper folder, plus `timeline.md` (a readable copy: key papers by year, then "All references" by number). Push to the reader (Step 6B, doc `timeline/current`). If the `db` write is refused as too large, shorten non-key roles, drop `date` for non-key items and retry once; if it still fails, say so.
+
+**Panel-by-panel explanation under each figure (all paper types).** After each figure's credit line, add one collapsed block, in English, that walks through every panel (or a natural group such as "Fig. 4d,e") in the order of the legend. Template above: material → method with the Methods section name and numbered steps → result with numbers → evidence level with caveats and misprints.
+- **Format:** a raw HTML `<details>` block whose first line is `<summary><b>Panel by panel</b> — material · method · result · evidence level</summary>`, then a blank line, then Markdown. Inside, each panel is a bold line `**Fig. Na — title**` followed by four bullets `Material / Method / Result / Evidence level`. No `#` headings inside the block (the reader's Contents lists h1–h3 only and a jump into a closed block would land nowhere). Close with a blank line and `</details>`. It is **collapsed by default** (no `open` attribute); the reader and most Markdown apps render it as a clickable disclosure, and marked + DOMPurify keep `details`/`summary` (closed on load, one click opens).
+- **Content rules:** Material names the exact data (which cohort, n tumours / cells / sections, which external dataset and its ref. number, which supplementary table carries the metadata). Method names the Methods section in quotes and gives the steps in order with tools, versions, parameters, cut-offs and the test (e.g. "Wilcoxon, FDR", "OLS", "Fisher's exact", "log-rank"). Result gives the panel's own numbers (read them off the figure crop and legend; P, FDR, n per arm, medians). Evidence level says what kind of proof it is and the caveats a reviewer would raise (sample size, external-data re-analysis, borderline FDR, missing multivariable model, label misprints); for wet-lab panels use the Framework B scale [correlation / necessity / sufficiency / rescue / in vivo / human tissue]. Where the paper's own text or Supplementary Notes add a step (e.g. "Supp Note 3"), cite it. Never pad: a schematic panel gets "Method: schematic. Evidence level: summary, not data."
+- **Where it goes:** every main figure of "7 · The story by figure" (types A–C) and every figure/box of a review (type D), not Extended Data. Write it from `text/main_text.txt`, the legend, the Methods and the figure crop; check each number once against the crop. The blocks make summary.md roughly 50 % longer; that is expected.
+- **Reader CSS:** `reader_template.html` styles the blocks (see Template notes in Step 6B).
 
 Figure citations: write them as "Fig. 1c", "ED Fig. 9g" (Extended Data), "Supp Fig. 6b" (Supplementary). Take every number from where the paper itself cites it (grep "Fig." / "Extended Data Fig." / "Supplementary Fig." around that claim in `text/main_text.txt`, and check the legend for the panel letter); never guess a panel. No figure cited for a claim: write "(text only)".
 
@@ -431,7 +455,7 @@ Order for every new paper: **summary.md first** (Step 6), **then** the Paper Rea
 - **Timeline** tab: a vertical timeline by year; each card has the title linked to the published paper, a type tag, authors · journal · year · ref. N, the role sentence and "In the review: <sections> · p. N" links that open that page; **Show all (N)** / **Key papers only**, search, section and type filters.
 - A page counter, zoom, and a **Contents · Notes** drawer (sections, figures, the headings of the text tabs, every question with its answer); the drawer can be widened by dragging its left edge.
 - **Resizable text column:** in Summary, Links and every type tab, drag the column's right edge (it turns blue on hover) to make the text wider or narrower, from 420 px up to the full reading area; the column stays centred, the passage at the top of the view stays in place and the pins follow their passages; the width is remembered in that browser, and double-clicking the edge restores the default 780 px.
-- Collapsed `<details>` blocks in the Markdown files render as clickable disclosures (closed by default), so a long section can be folded away without a heading.
+- The panel-by-panel block under each figure (and any other `<details>` block in the Markdown files) renders as a clickable disclosure, closed by default.
 - Selecting text in any tab shows **Ask Claude** and **Translate**. Ask Claude opens a box (bottom-left; draggable) with the quote, quick questions (Explain simply / How was it computed? / Evidence? / **For my research**, shown only when a research direction is set) and a text field. **Send** stores the question on the page (`db` collection `qa`) with a "…" pin on the passage; it is answered when the user says "go" (below), then shows in Notes and as a yellow "Q" pin on the left edge. Each note shows when it was asked and answered, can be collapsed, and can be deleted (two clicks, with Undo).
 - **Translate** answers instantly from the page through the `sample` capability (no "go", nothing saved): a word gets its pronunciation, translation, meanings and the meaning in this sentence; a passage gets a full translation keeping gene names, symbols, numbers and figure references. A menu of the 50 most-used languages; the default is the browser's language (or Chinese (Simplified) when the browser is English, or `--translate-to`), and the choice is remembered in that browser. 🔊 reads aloud with the computer's voices. The first use asks the user once to allow the page to use Claude.
 - Each tab keeps its place when switching tabs.
