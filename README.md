@@ -18,7 +18,7 @@ Read a research paper end to end with Claude. Give it a title, DOI or link; Pape
   | C · Method / tool | new algorithms, software packages | **Parameters & training**, **Tutorial** (from the official tutorial, with Copy buttons) |
   | D · Review | reviews and perspectives | **Timeline**: every cited paper by year, key papers first |
 
-  Every summary covers citations and the authors' earlier work, the technology, the logic of the paper, the main findings with figure panels, the story figure by figure (with a collapsed panel-by-panel walkthrough: material, method, result, evidence level), the exact parameters, what the reviewers attacked, and the paper in plain words. If you give your research direction, it also explains how to apply the paper to your work.
+  Every summary covers citations and the authors' earlier work, the technology, the logic of the paper, the main findings with figure panels, the story figure by figure (with a panel-by-panel walkthrough under each figure: material, method, result, evidence level, and a guided reading of schematic panels; open in the reader, foldable), the exact parameters, what the reviewers attacked, and the paper in plain words. If you give your research direction, it also explains how to apply the paper to your work.
 - **A Paper Reader** (a private web page in your Claude account): the real PDF pages with selectable text, the summary and the other tabs (with a text column you can widen by dragging its edge), a contents drawer, and two buttons on any selection:
   - **Ask Claude** saves your question on the page; say "go" in the chat and Claude answers every waiting question there and on the page.
   - **Translate** answers instantly in 50 languages, with pronunciation and meanings for single words.

@@ -475,6 +475,8 @@ function renderSummary() {
   sumEl.querySelectorAll('a[href^="http"]').forEach(a => { a.target = '_blank'; a.rel = 'noopener'; });
   sumEl.querySelectorAll('img').forEach(im => { im.loading = 'lazy'; im.onload = updatePageNo; im.onclick = () => openLightbox(im.src, im.alt); });
   addCopyButtons();
+  /* panel-by-panel blocks start open on every render (tab switch, reload, new answers); the reader can fold them */
+  sumEl.querySelectorAll('details').forEach(d => { d.open = true; });
   applySummaryHighlights();
   updatePageNo();
 }
