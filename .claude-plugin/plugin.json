@@ -7,11 +7,11 @@
     "name": "Yufan Chen",
     "url": "https://github.com/yufchen723"
   },
-  "homepage": "https://github.com/yufchen723/paperlens",
-  "repository": "https://github.com/yufchen723/paperlens",
+  "homepage": "https://github.com/yufchen723/PaperLens",
+  "repository": "https://github.com/yufchen723/PaperLens",
   "license": "MIT",
   "keywords": ["research", "papers", "literature", "zotero", "summary", "pdf", "google-scholar", "translation", "science"],
-  "documentationUrl": "https://github.com/yufchen723/paperlens#readme",
-  "supportUrl": "https://github.com/yufchen723/paperlens/issues",
-  "privacyPolicyUrl": "https://github.com/yufchen723/paperlens#privacy-and-data"
+  "documentationUrl": "https://github.com/yufchen723/PaperLens#readme",
+  "supportUrl": "https://github.com/yufchen723/PaperLens/issues",
+  "privacyPolicyUrl": "https://github.com/yufchen723/PaperLens#privacy-and-data"
 }

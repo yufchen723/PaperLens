@@ -39,19 +39,19 @@ Say "change my research direction" or "reset PaperLens settings" any time to cha
 
 **Claude (web, desktop):** find **PaperLens** in Skills → Discover and click **+** (once listed). Until then, upload it as a skill:
 
-1. Download **[paperlens-skill.zip](https://github.com/yufchen723/paperlens/raw/download/paperlens-skill.zip)**.
+1. Download **[paperlens-skill.zip](https://github.com/yufchen723/PaperLens/raw/download/paperlens-skill.zip)**.
 2. In Claude, open **Customize → Skills → + → Upload a skill** and choose the zip (don't unzip it). The Paper Reader tools are inside it.
 
 **Claude Code:**
 
 ```
-/plugin install paperlens --marketplace yufchen723/paperlens
+/plugin install paperlens --marketplace yufchen723/PaperLens
 ```
 
 or, on older versions:
 
 ```
-/plugin marketplace add yufchen723/paperlens
+/plugin marketplace add yufchen723/PaperLens
 /plugin install paperlens@paperlens
 ```
 
