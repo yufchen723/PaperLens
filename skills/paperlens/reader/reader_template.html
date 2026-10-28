@@ -224,6 +224,7 @@ button.del.armed{background:#f8c9bf;color:#000;border-color:#c0392b;font-weight:
 #summary .stamp{font:500 11px var(--f-mono);color:var(--muted);margin:0 0 1em}
 #summary .hl-block{background:var(--note-soft);border-radius:3px}
 #summary .pin{left:-14px}
+#summary .pin.moved{outline:2px dashed var(--muted);outline-offset:1px}
 /* collapsible panel-by-panel blocks in the Summary (her request 2026-10-23) */
 #summary details{margin:.5em 0 1.2em;border:1px solid var(--rule);border-radius:8px;background:var(--bg);padding:0 .9em}
 #summary details>summary{cursor:pointer;padding:.55em 0;font-size:.95em;color:var(--muted);list-style:revert}
@@ -459,7 +460,7 @@ function showView(v) {
 function openMd(key, noteId) {
   savePos(); hideAsk(); hidePop(); state.mdKey = key; showView('md'); renderSummary();
   const mp = state.pos['md:' + key]; scrollEl.scrollTop = mp ? mp.top : 0; state.reapply = null; updatePageNo(); renderDrawer();
-  if (noteId) { const t = sumEl.querySelector(`[data-note="${CSS.escape(noteId)}"]`); if (t) t.scrollIntoView({ block: 'center' }); }
+  if (noteId) { const p = sumEl.querySelector(`.pin[data-note="${CSS.escape(noteId)}"]`); const t = (p && p._blk && p._blk.getClientRects().length) ? p._blk : p; if (t) t.scrollIntoView({ block: 'center' }); }
 }
 function slug(t, i) { return 'sum-' + i + '-' + String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40); }
 function renderSummary() {
@@ -473,10 +474,10 @@ function renderSummary() {
   sumEl.querySelectorAll('table').forEach(t => { const w = document.createElement('div'); w.className = 'tw'; t.parentNode.insertBefore(w, t); w.appendChild(t); });
   sumEl.querySelectorAll('h1,h2,h3').forEach((h, i) => { h.id = slug(h.textContent, i); });
   sumEl.querySelectorAll('a[href^="http"]').forEach(a => { a.target = '_blank'; a.rel = 'noopener'; });
-  sumEl.querySelectorAll('img').forEach(im => { im.loading = 'lazy'; im.onload = updatePageNo; im.onclick = () => openLightbox(im.src, im.alt); });
+  sumEl.querySelectorAll('img').forEach(im => { im.loading = 'lazy'; im.onload = () => { placeSummaryPins(); updatePageNo(); }; im.onclick = () => openLightbox(im.src, im.alt); });
   addCopyButtons();
   /* panel-by-panel blocks start open on every render (tab switch, reload, new answers); the reader can fold them */
-  sumEl.querySelectorAll('details').forEach(d => { d.open = true; });
+  sumEl.querySelectorAll('details').forEach(d => { d.open = true; d.addEventListener('toggle', placeSummaryPins); });
   applySummaryHighlights();
   updatePageNo();
 }
@@ -553,33 +554,104 @@ function sectionOf(node) {
   }
   return sec;
 }
+/* where each note sits in a text tab. The whole column is searched with whitespace ignored, so a quote that spans
+   two lines (a panel title + its first bullet) still matches; a quote that occurs several times goes to the occurrence in
+   the note's own section, next to the passage saved with it (anchor_ctx), else the first one there; a quote whose text
+   has since been rewritten falls back to its first words inside that section, then to the section heading itself. */
+const PIN_BLOCK = 'p,li,td,th,h1,h2,h3,h4,blockquote,summary,pre,.tl-title,.tl-meta,.tl-role,.tl-where';
+function sumTextMap() {
+  const skip = n => n.parentElement && n.parentElement.closest('.pin,.copy,.stamp,.tl-bar');
+  const tw = document.createTreeWalker(sumEl, NodeFilter.SHOW_TEXT, { acceptNode: n => skip(n) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+  const map = [], heads = []; let full = '', lastH = null;
+  for (let n; (n = tw.nextNode());) {
+    const h = n.parentElement.closest('h1,h2,h3');
+    if (h && h !== lastH && sumEl.contains(h)) { heads.push({ el: h, at: full.length, text: h.textContent.trim() }); lastH = h; }
+    const t = n.nodeValue;
+    for (let k = 0; k < t.length; k++) { const c = t[k]; if (/\s/.test(c)) continue; const lc = /[‐-―−]/.test(c) ? '-' : c.toLowerCase(); if (lc.length !== 1) continue; map.push([n, k]); full += lc; }
+  }
+  return { map, heads, full };
+}
+function locateNote(note, T) {
+  const sec = String(note.section || '').trim();
+  const secAt = i => { let x = ''; for (const h of T.heads) { if (h.at <= i) x = h.text; else break; } return x; };
+  const blockAt = i => { const n = T.map[i] && T.map[i][0]; return n ? (n.parentElement.closest(PIN_BLOCK) || n.parentElement) : null; };
+  const ctx = norm(note.anchor_ctx || '').slice(0, 120);
+  const q0 = norm(note.anchor_text || note.quote).slice(0, 400);
+  const tries = [q0]; for (const L of [80, 40, 24, 14]) if (q0.length > L + 6) tries.push(q0.slice(0, L));
+  for (let k = 0; k < tries.length; k++) {
+    const q = tries[k]; if (q.length < 2) continue;
+    let hits = []; for (let i = T.full.indexOf(q); i >= 0 && hits.length < 400; i = T.full.indexOf(q, i + 1)) hits.push(i);
+    if (k > 0 && sec) hits = hits.filter(i => secAt(i) === sec);   /* a shortened quote counts only inside its own section */
+    if (!hits.length) continue;
+    const score = i => { let v = sec && secAt(i) === sec ? 2 : 0;
+      if (ctx) { const bt = norm((blockAt(i) || {}).textContent); if (bt && (bt.includes(ctx.slice(0, 60)) || ctx.includes(bt.slice(0, 60)))) v += 4; }
+      return v; };
+    let best = hits[0], bs = score(best); for (const i of hits) { const v = score(i); if (v > bs) { bs = v; best = i; } }
+    return { at: best, len: q.length, exact: k === 0 && !note.anchor_text };
+  }
+  const h = sec && T.heads.find(x => x.text === sec);
+  return h ? { at: h.at, len: 0, exact: false, el: h.el } : null;
+}
 function applySummaryHighlights() {
   sumEl.querySelectorAll('.pin').forEach(p => p.remove());
   sumEl.querySelectorAll('.hl-block').forEach(b => b.classList.remove('hl-block'));
   sumEl.querySelectorAll('[data-note]').forEach(b => b.removeAttribute('data-note'));
   const ranges = [];
   const mine = state.notes.filter(n => n.doc === state.mdKey && n.quote);
-  const blocks = [...sumEl.querySelectorAll('p,li,td,th,h1,h2,h3,blockquote,.tl-title,.tl-meta')];
+  const T = mine.length ? sumTextMap() : null;
+  const useHl = !!(window.CSS && CSS.highlights && window.Highlight);
   mine.forEach(note => {
-    const q = norm(note.quote).slice(0, 400); if (!q) return;
-    const blk = blocks.filter(b => norm(b.textContent).includes(q)).pop(); if (!blk) return;
-    blk.setAttribute('data-note', note.id);
-    let made = false;
-    if (window.CSS && CSS.highlights && window.Highlight) {
-      const tw = document.createTreeWalker(blk, NodeFilter.SHOW_TEXT); const map = []; let full = '';
-      for (let n; (n = tw.nextNode());) { const t = n.nodeValue; for (let i = 0; i < t.length; i++) { if (!/\s/.test(t[i])) { map.push([n, i]); full += t[i].toLowerCase(); } } }
-      const at = full.indexOf(q);
-      if (at >= 0) { const r = document.createRange(); const a = map[at], b = map[at + q.length - 1]; r.setStart(a[0], a[1]); r.setEnd(b[0], b[1] + 1); ranges.push(r); made = true; }
-    }
-    if (!made) blk.classList.add('hl-block');
-    const pin = document.createElement('button'); pin.className = 'pin' + (note.status === 'answered' ? '' : ' wait');
-    pin.textContent = note.status === 'answered' ? 'Q' : '…'; pin.title = 'Show the saved question and answer';
-    pin.style.top = (blk.getBoundingClientRect().top - sumEl.getBoundingClientRect().top - 2) + 'px';
+    const loc = locateNote(note, T); if (!loc) return;
+    let blk, rng = null;
+    if (loc.len) {
+      const a = T.map[loc.at], b = T.map[loc.at + loc.len - 1];
+      blk = a[0].parentElement.closest(PIN_BLOCK) || a[0].parentElement;
+      rng = document.createRange(); rng.setStart(a[0], a[1]); rng.setEnd(b[0], b[1] + 1);
+      if (useHl) ranges.push(rng); else blk.classList.add('hl-block');
+    } else blk = loc.el;
+    if (!blk.hasAttribute('data-note')) blk.setAttribute('data-note', note.id);
+    const pin = document.createElement('button'); pin.className = 'pin' + (note.status === 'answered' ? '' : ' wait') + (loc.exact ? '' : ' moved');
+    pin.textContent = note.status === 'answered' ? 'Q' : '…';
+    pin.title = loc.exact ? 'Show the saved question and answer' : (loc.len ? 'Show the saved question and answer (this passage was reworded after you asked)' : 'Show the saved question and answer (the passage was rewritten after you asked; the note is pinned at its section)');
+    pin.dataset.note = note.id; pin._blk = blk; pin._range = rng;
     pin.onclick = e => { e.stopPropagation(); showPop(note, pin); };
     sumEl.appendChild(pin);
   });
-  if (window.CSS && CSS.highlights && window.Highlight) { CSS.highlights.delete('qa-hl'); if (ranges.length) CSS.highlights.set('qa-hl', new Highlight(...ranges)); }
+  if (useHl) { CSS.highlights.delete('qa-hl'); if (ranges.length) CSS.highlights.set('qa-hl', new Highlight(...ranges)); }
+  placeSummaryPins();
 }
+/* pins follow their passage: re-placed whenever the column's layout changes (a figure finishes loading, a panel-by-panel
+   block is folded or opened, the column or window is resized). A passage inside a folded block puts its pin on that
+   block's summary line, so the note stays visible. */
+function placeSummaryPins() {
+  const top0 = sumEl.getBoundingClientRect().top;
+  /* the outermost folded block around el (Chrome still reports positions for text inside a closed <details>, so check
+     the blocks themselves); el in that block's own summary line is not folded */
+  const foldedAround = el => { let out = null;
+    for (let d = el.closest('details'); d; d = d.parentElement ? d.parentElement.closest('details') : null) {
+      const sm = d.querySelector(':scope > summary'); if (!d.open && !(sm && sm.contains(el))) out = d; }
+    return out; };
+  const stack = new Map();   /* several notes on one line (or in one folded block) line up under each other */
+  sumEl.querySelectorAll('.pin').forEach(pin => {
+    const t = pin._blk; if (!t || !t.isConnected) { pin.hidden = true; return; }
+    const fd = foldedAround(t);
+    let y = null, key = t;
+    if (fd) { const sm = fd.querySelector(':scope > summary') || fd; key = sm; if (sm.getClientRects().length) y = sm.getBoundingClientRect().top - 2; }
+    else {
+      const rr = pin._range && pin._range.getClientRects();   /* the highlighted line itself */
+      const r0 = rr && rr.length ? ([...rr].find(x => x.height > 0) || rr[0]) : null;
+      if (r0) y = r0.top - 3; else if (t.getClientRects().length) y = t.getBoundingClientRect().top - 2;
+    }
+    if (y === null) { pin.hidden = true; return; }
+    const n = stack.get(key) || 0; stack.set(key, n + 1);
+    pin.hidden = false; pin.style.top = (y - top0 + 26 * n) + 'px';
+  });
+}
+(() => {
+  if (!window.ResizeObserver) return;
+  let raf = 0;
+  new ResizeObserver(() => { if (state.view !== 'md') return; cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { placeSummaryPins(); updatePageNo(); }); }).observe(sumEl);
+})();
 
 /* text-column width: drag the right edge of Summary / Links / any text tab; remembered on this computer */
 const SW_STORE = 'paperReader.summaryWidth', SW_MIN = 420, SW_DEF = 780;
@@ -738,7 +810,8 @@ function onSelect(e) {
   const text = s.toString().replace(/\s+/g, ' ').trim();
   const r = s.getRangeAt(0); const startEl = (r.startContainer.nodeType === 1 ? r.startContainer : r.startContainer.parentElement);
   if (startEl && startEl.closest('#summary') && text.length >= 2) {
-    state.sel = { range: r.cloneRange(), quote: text.slice(0, 1500), page: 0, doc: state.mdKey, section: sectionOf(startEl), shell: null, span: null };
+    const ab = startEl.closest(PIN_BLOCK);
+    state.sel = { range: r.cloneRange(), quote: text.slice(0, 1500), page: 0, doc: state.mdKey, section: sectionOf(startEl), ctx: ab ? ab.textContent.replace(/\s+/g, ' ').trim().slice(0, 300) : '', shell: null, span: null };
     placeBar(r.getBoundingClientRect()); return;
   }
   const sh = startEl && startEl.closest('.page');
@@ -1020,7 +1093,7 @@ $('#send').onclick = async () => {
   const db = await getDb();
   if (!db) { msg.className = 'warn'; msg.textContent = 'Questions can only be sent when you are signed in to Claude. Open this page from the Claude app.'; $('#send').disabled = false; return; }
   try {
-    await db.collection('qa').doc().set({ doc: sel.doc, page: sel.page, section: sel.section || '', quote: sel.quote, question: q.slice(0, 2000),
+    await db.collection('qa').doc().set({ doc: sel.doc, page: sel.page, section: sel.section || '', quote: sel.quote, ...(sel.ctx ? { anchor_ctx: sel.ctx } : {}), question: q.slice(0, 2000),
       asked_at: new Date().toISOString(), status: 'open' });
     msg.className = 'ok'; msg.textContent = 'Saved. Ask more anytime; say “go” in the chat and Claude answers them there and here.';
     $('#askText').value = ''; setTimeout(hideAsk, 2400);
