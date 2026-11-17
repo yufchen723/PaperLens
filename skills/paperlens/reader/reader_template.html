@@ -241,6 +241,35 @@ button.del.armed{background:#f8c9bf;color:#000;border-color:#c0392b;font-weight:
 .note.collapsed .when{display:none}
 #pop .popwhen{font:500 11px var(--f-mono);color:var(--muted);margin:0 0 4px}
 ::highlight(qa-hl){background-color:var(--note-soft)}
+/* the reader's own notes: Note button -> highlight / underline in six colours + typed text; square N pins */
+#selBar #noteBtn{background:var(--panel);color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.25),inset 0 0 0 1.5px var(--accent)}
+.pin.n{border-radius:5px;color:#1c1c1c}
+.chip{display:inline-block;width:18px;height:18px;margin-right:6px;font:600 11px/18px var(--f-mono);text-align:center;color:#1c1c1c;vertical-align:1px;flex:none}
+.chip.n{border-radius:4px}
+.chip.q{border-radius:50%;background:var(--note);color:#3a2c00}
+.note.mine .q{font-weight:500;white-space:pre-wrap}
+.note.mine .q.none{color:var(--muted);font-style:italic}
+#nb{position:fixed;z-index:9;left:max(12px,env(safe-area-inset-left,0px));bottom:max(12px,env(safe-area-inset-bottom,0px));
+  width:min(420px,calc(100vw - 24px));background:var(--panel);border:1px solid var(--rule);border-radius:12px;
+  box-shadow:0 8px 28px rgba(0,0,0,.28);padding:12px;display:flex;flex-direction:column;gap:8px}
+#nb[hidden]{display:none}
+#nb .head{display:flex;justify-content:space-between;align-items:center;font-weight:600;cursor:move;touch-action:none;user-select:none;-webkit-user-select:none}
+#nb .head span span,#nb .head>span:last-child{font:500 11px var(--f-mono);color:var(--muted)}
+#nb.dragging{opacity:.92;box-shadow:0 12px 36px rgba(0,0,0,.35)}
+#nb blockquote{margin:0;max-height:96px;overflow:auto;padding:6px 8px;border-left:3px solid var(--nc,var(--note));font-size:12.5px;color:var(--fg);border-radius:0 6px 6px 0}
+#nb blockquote.hl{background:var(--ncs,var(--note-soft))}
+#nb blockquote.ul span{text-decoration:underline;text-decoration-color:var(--nc,var(--note));text-decoration-thickness:2px;text-underline-offset:3px}
+#nb .tools{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#nb .tools button{border:1px solid var(--rule);background:transparent;color:var(--fg);border-radius:7px;padding:3px 9px;font-size:12.5px;cursor:pointer}
+#nb .tools button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);font-weight:600}
+#nb .tools .sw{width:22px;height:22px;padding:0;border-radius:50%;border:2px solid transparent;box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)}
+#nb .tools .sw[aria-pressed="true"]{border-color:var(--fg)}
+#nb .tools .sep{width:1px;height:18px;background:var(--rule);margin:0 2px}
+#nb textarea{width:100%;min-height:76px;resize:vertical;border:1px solid var(--rule);border-radius:8px;padding:8px;background:var(--bg);color:var(--fg);font:14px/1.45 var(--f-ui)}
+#nb .row{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px}
+#nb .row .warn{color:var(--warn)} #nb .row .ok{color:var(--ok)}
+#nb #nbSave{border:0;border-radius:8px;background:var(--accent);color:var(--accent-ink);padding:6px 12px;font-weight:600;cursor:pointer}
+#nb #nbSave:disabled{opacity:.55;cursor:default}
 @media (max-width:560px){#bar .title{display:none}.hide-sm{display:none}}
 </style>
 
@@ -261,7 +290,7 @@ button.del.armed{background:#f8c9bf;color:#000;border-color:#c0392b;font-weight:
   <div class="body" id="drawerBody"></div>
 </aside>
 
-<div id="selBar" hidden><button id="askBtn">Ask Claude</button><button id="trBtn" hidden>Translate</button></div>
+<div id="selBar" hidden><button id="askBtn">Ask Claude</button><button id="trBtn" hidden>Translate</button><button id="noteBtn" title="Highlight or underline this passage and write your own note">Note</button></div>
 <section id="tr" hidden aria-label="Translate the selection">
   <div class="head" title="Drag to move · double-click to put it back"><span class="grip" aria-hidden="true">⋮⋮</span><span class="from" id="trFrom">Detecting…</span><span class="arrow">→</span>
     <select id="trLang" aria-label="Translate to"></select>
@@ -271,6 +300,20 @@ button.del.armed{background:#f8c9bf;color:#000;border-color:#c0392b;font-weight:
 <div id="pop" hidden></div>
 <div id="toast" role="status" hidden></div>
 <div id="lightbox" hidden><img alt=""></div>
+
+<section id="nb" hidden aria-label="Write your own note on the selection">
+  <div class="head" title="Drag to move · double-click to put it back"><span><span class="grip" aria-hidden="true">⋮⋮</span><b id="nbTitle">Note on this passage</b></span> <span id="nbWhere"></span></div>
+  <blockquote id="nbQuote"><span></span></blockquote>
+  <div class="tools" id="nbTools">
+    <button data-mark="hl" aria-pressed="true" title="Highlight the passage">Highlight</button>
+    <button data-mark="ul" aria-pressed="false" title="Underline the passage"><u>Underline</u></button>
+    <span class="sep" aria-hidden="true"></span>
+    <span id="nbColors" style="display:flex;gap:5px;align-items:center"></span>
+  </div>
+  <textarea id="nbText" placeholder="Type your note (optional: leave empty to keep only the highlight or underline)…" maxlength="4000"></textarea>
+  <div class="row"><span id="nbMsg"></span>
+    <span><button class="icon" id="nbCancel">Cancel</button> <button id="nbSave">Save note</button></span></div>
+</section>
 
 <section id="ask" hidden aria-label="Ask Claude about the selection">
   <div class="head" title="Drag to move · double-click to put it back"><span><span class="grip" aria-hidden="true">⋮⋮</span>Ask about this passage</span> <span id="askWhere"></span></div>
@@ -453,7 +496,7 @@ let rT; addEventListener('resize', () => { clearTimeout(rT); if (state.view === 
 
 /* summary view */
 function showView(v) {
-  state.view = v;
+  state.view = v; syncOwnHighlights();
   pagesEl.hidden = v !== 'pdf'; sumWrap.hidden = v !== 'md';
   document.querySelectorAll('#docSeg button').forEach(b => b.setAttribute('aria-pressed', v === 'pdf' ? b.dataset.key === state.doc : b.dataset.md === state.mdKey));
 }
@@ -594,9 +637,9 @@ function locateNote(note, T) {
 }
 function applySummaryHighlights() {
   sumEl.querySelectorAll('.pin').forEach(p => p.remove());
-  sumEl.querySelectorAll('.hl-block').forEach(b => b.classList.remove('hl-block'));
+  sumEl.querySelectorAll('.hl-block').forEach(b => { b.classList.remove('hl-block'); Object.keys(NOTE_COLORS).forEach(c => b.classList.remove('nb-' + c)); });
   sumEl.querySelectorAll('[data-note]').forEach(b => b.removeAttribute('data-note'));
-  const ranges = [];
+  const ranges = [], own = {};
   const mine = state.notes.filter(n => n.doc === state.mdKey && n.quote);
   const T = mine.length ? sumTextMap() : null;
   const useHl = !!(window.CSS && CSS.highlights && window.Highlight);
@@ -607,17 +650,22 @@ function applySummaryHighlights() {
       const a = T.map[loc.at], b = T.map[loc.at + loc.len - 1];
       blk = a[0].parentElement.closest(PIN_BLOCK) || a[0].parentElement;
       rng = document.createRange(); rng.setStart(a[0], a[1]); rng.setEnd(b[0], b[1] + 1);
-      if (useHl) ranges.push(rng); else blk.classList.add('hl-block');
+      if (isMine(note)) { if (useHl) markClasses(note).forEach(k => (own[k] ||= []).push(rng)); else blk.classList.add('hl-block', 'nb-' + noteColor(note)); }
+      else if (useHl) ranges.push(rng); else blk.classList.add('hl-block');
     } else blk = loc.el;
     if (!blk.hasAttribute('data-note')) blk.setAttribute('data-note', note.id);
-    const pin = document.createElement('button'); pin.className = 'pin' + (note.status === 'answered' ? '' : ' wait') + (loc.exact ? '' : ' moved');
-    pin.textContent = note.status === 'answered' ? 'Q' : '…';
-    pin.title = loc.exact ? 'Show the saved question and answer' : (loc.len ? 'Show the saved question and answer (this passage was reworded after you asked)' : 'Show the saved question and answer (the passage was rewritten after you asked; the note is pinned at its section)');
+    const pin = document.createElement('button'); pin.className = 'pin' + (isMine(note) ? ' n' : (note.status === 'answered' ? '' : ' wait')) + (loc.exact ? '' : ' moved');
+    pin.textContent = isMine(note) ? 'N' : (note.status === 'answered' ? 'Q' : '…');
+    if (isMine(note)) pin.style.background = NOTE_COLORS[noteColor(note)][0];
+    const what = isMine(note) ? 'Show your note' : 'Show the saved question and answer';
+    pin.title = loc.exact ? what : (loc.len ? what + ' (this passage was reworded after you wrote it)' : what + ' (the passage was rewritten since; pinned at its section)');
     pin.dataset.note = note.id; pin._blk = blk; pin._range = rng;
     pin.onclick = e => { e.stopPropagation(); showPop(note, pin); };
     sumEl.appendChild(pin);
   });
-  if (useHl) { CSS.highlights.delete('qa-hl'); if (ranges.length) CSS.highlights.set('qa-hl', new Highlight(...ranges)); }
+  if (useHl) { CSS.highlights.delete('qa-hl'); if (ranges.length) CSS.highlights.set('qa-hl', new Highlight(...ranges));
+  }
+  ownHl.md = own; syncOwnHighlights();
   placeSummaryPins();
 }
 /* pins follow their passage: re-placed whenever the column's layout changes (a figure finishes loading, a panel-by-panel
@@ -706,6 +754,30 @@ function toggleDrawer(force) {
 $('#tabToc').onclick = () => { state.drawerTab = 'toc'; renderDrawer(); };
 $('#tabNotes').onclick = () => { state.drawerTab = 'notes'; renderDrawer(); };
 function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+/* the reader's own notes: kind 'note' in the same qa collection (status 'note', so "go" never picks them up) */
+const NOTE_COLORS = { yellow: ['#f4c430', 'rgba(244,196,48,.40)'], green: ['#4cb673', 'rgba(76,182,115,.34)'], blue: ['#4a94e0', 'rgba(74,148,224,.32)'],
+  pink: ['#e86aa6', 'rgba(232,106,166,.32)'], orange: ['#f08c32', 'rgba(240,140,50,.36)'], purple: ['#9a6ad8', 'rgba(154,106,216,.32)'] };
+const isMine = n => n && n.kind === 'note';
+const noteColor = n => NOTE_COLORS[n && n.color] ? n.color : 'yellow';
+const noteMark = n => (n && (n.mark === 'ul' || n.mark === 'both')) ? n.mark : 'hl';
+const markClasses = n => { const c = noteColor(n), m = noteMark(n); return (m !== 'ul' ? ['nh-' + c] : []).concat(m !== 'hl' ? ['nu-' + c] : []); };
+const NOTE_CLASSES = Object.keys(NOTE_COLORS).flatMap(c => ['nh-' + c, 'nu-' + c]);
+(() => { const st = document.createElement('style');
+  st.textContent = Object.entries(NOTE_COLORS).map(([c, [solid, soft]]) =>
+    `.textLayer span.nh-${c}{background:${soft};border-radius:2px}.textLayer span.nu-${c}{box-shadow:inset 0 -2px 0 ${solid}}` +
+    `::highlight(nh-${c}){background-color:${soft}}::highlight(nu-${c}){text-decoration:underline 2px ${solid};text-underline-offset:3px}` +
+    `#summary .hl-block.nb-${c}{background:${soft}}`).join('');
+  document.head.appendChild(st); })();
+/* exact-range marks (CSS Custom Highlight API): one registry, filled from the visible view only */
+const HL_OK = !!(window.CSS && CSS.highlights && window.Highlight);
+const ownHl = { pdf: new Map(), md: {} };
+function syncOwnHighlights() {
+  if (!HL_OK) return;
+  const all = {};
+  if (state.view === 'md') Object.entries(ownHl.md).forEach(([k, rs]) => (all[k] ||= []).push(...rs));
+  else ownHl.pdf.forEach((own, sh) => { if (!sh.isConnected) { ownHl.pdf.delete(sh); return; } Object.entries(own).forEach(([k, rs]) => (all[k] ||= []).push(...rs)); });
+  NOTE_CLASSES.forEach(k => { CSS.highlights.delete(k); if (all[k] && all[k].length) CSS.highlights.set(k, new Highlight(...all[k])); });
+}
 function renderDrawer() {
   $('#tabToc').setAttribute('aria-pressed', state.drawerTab === 'toc');
   $('#tabNotes').setAttribute('aria-pressed', state.drawerTab === 'notes');
@@ -727,13 +799,15 @@ function renderDrawer() {
     body.querySelectorAll('a[data-p]').forEach(a => a.onclick = e => { e.preventDefault(); goPage(+a.dataset.p); if (innerWidth < 900) toggleDrawer(false); });
   } else {
     const list = state.notes.slice().sort((a, b) => (a.doc === b.doc ? a.page - b.page : a.doc < b.doc ? -1 : 1));
-    if (!list.length) { body.innerHTML = `<p class="empty">No questions yet. Select a sentence in the paper and press <b>Ask Claude</b>. Questions wait here; say “go” in the chat and Claude answers them in the chat and saves each answer here, highlighted on its page. Delete any note with its Delete button.</p>`; return; }
+    if (!list.length) { body.innerHTML = `<p class="empty">Nothing here yet. Select a sentence in the paper, then press <b>Note</b> to highlight or underline it and write your own note, or <b>Ask Claude</b> to save a question. Questions wait here; say “go” in the chat and Claude answers them in the chat and saves each answer here. Delete any note with its Delete button.</p>`; return; }
     const allBar = `<div class="notes-bar"><button data-all="collapse" title="Show only the question line of every note">Collapse all</button><button data-all="expand" title="Show every note in full">Expand all</button></div>`;
-    body.innerHTML = allBar + list.map(n => { const c = collapsedNotes.has(n.id); return `<article class="note${c ? ' collapsed' : ''}" data-id="${esc(n.id)}">
+    body.innerHTML = allBar + list.map(n => { const c = collapsedNotes.has(n.id); return `<article class="note${isMine(n) ? ' mine' : ''}${c ? ' collapsed' : ''}" data-id="${esc(n.id)}"${isMine(n) ? ` style="border-left-color:${NOTE_COLORS[noteColor(n)][0]}"` : ''}>
       <div class="meta"><button class="tog" aria-expanded="${!c}" title="${c ? 'Expand this note' : 'Collapse this note'}">${c ? '▸' : '▾'}</button><span class="where">${esc(docLabel(n.doc, n.page, n.section))}</span><span title="Asked (your local time)">${esc(fmtWhen(n.asked_at))}</span></div>
       ${n.quote ? `<blockquote>${esc(n.quote)}</blockquote>` : ''}
-      <p class="q">Q: ${esc(n.question)}</p>${n.status === 'answered' ? `<p class="a">${esc(n.answer)}</p>${n.answered_at ? `<p class="when">Answered ${esc(fmtWhen(n.answered_at))}</p>` : ''}` : `<p class="pending">Waiting for Claude. Say “go” in the chat to get all waiting questions answered.</p>`}
-      <p class="acts"><button data-go="${esc(n.doc)}|${esc(n.page)}|${esc(n.id)}">Go to passage</button><button class="del" data-del="${esc(n.id)}" title="Delete this question and its answer">Delete</button></p></article>`; }).join('');
+      ${isMine(n) ? `<p class="q${n.note ? '' : ' none'}"><span class="chip n" style="background:${NOTE_COLORS[noteColor(n)][0]}">N</span>${n.note ? esc(n.note) : (noteMark(n) === 'ul' ? 'Underline' : noteMark(n) === 'both' ? 'Highlight and underline' : 'Highlight') + ' only'}</p>${n.updated_at ? `<p class="when">Edited ${esc(fmtWhen(n.updated_at))}</p>` : ''}
+      <p class="acts"><button data-go="${esc(n.doc)}|${esc(n.page)}|${esc(n.id)}">Go to passage</button><button data-edit="${esc(n.id)}" title="Change the text, colour or style">Edit</button><button class="del" data-del="${esc(n.id)}" title="Delete this note and its highlight">Delete</button></p></article>` : `
+      <p class="q"><span class="chip q">Q</span>${esc(n.question)}</p>${n.status === 'answered' ? `<p class="a">${esc(n.answer)}</p>${n.answered_at ? `<p class="when">Answered ${esc(fmtWhen(n.answered_at))}</p>` : ''}` : `<p class="pending">Waiting for Claude. Say “go” in the chat to get all waiting questions answered.</p>`}
+      <p class="acts"><button data-go="${esc(n.doc)}|${esc(n.page)}|${esc(n.id)}">Go to passage</button><button class="del" data-del="${esc(n.id)}" title="Delete this question and its answer">Delete</button></p></article>`}`; }).join('');
     body.querySelectorAll('article.note').forEach(card => {
       const flip = e => { e.stopPropagation(); setCollapsed(card, !card.classList.contains('collapsed')); saveCollapsed(); };
       card.querySelector('.meta').onclick = flip; card.querySelector('.q').onclick = flip;
@@ -749,6 +823,7 @@ function renderDrawer() {
       if (innerWidth < 900) toggleDrawer(false);
     });
     body.querySelectorAll('button[data-del]').forEach(b => armDelete(b, b.dataset.del));
+    body.querySelectorAll('button[data-edit]').forEach(b => b.onclick = e => { e.stopPropagation(); const n = state.notes.find(x => x.id === b.dataset.edit); if (n) openNoteBox(n); });
   }
 }
 
@@ -757,31 +832,46 @@ const norm = s => String(s || '').replace(/\s+/g, '').replace(/[‐-―−]/g, '
 function applyHighlights(sh) {
   sh.querySelectorAll('.pin').forEach(p => p.remove());
   sh.querySelectorAll('span.hl').forEach(s => { s.classList.remove('hl'); });
+  sh.querySelectorAll('span[data-nm]').forEach(s => { s.classList.remove(...NOTE_CLASSES); s.removeAttribute('data-nm'); });
+  const stackAt = new Map();   /* several pins on one line sit under each other */
+  const own = {}; ownHl.pdf.set(sh, own);
   const tl = sh.querySelector('.textLayer'); if (!tl) return;
   const n = +sh.dataset.page;
   const mine = state.notes.filter(x => x.doc === state.doc && +x.page === n && x.quote);
-  if (!mine.length) return;
+  if (!mine.length) { syncOwnHighlights(); return; }
   const spans = [...tl.querySelectorAll('span')].filter(s => !s.children.length);
-  let full = '', idx = [];
-  spans.forEach((s, i) => { const t = norm(s.textContent); for (let k = 0; k < t.length; k++) idx.push(i); full += t; });
+  let full = '', idx = [], cmap = [];   /* cmap: normalised character -> [text node, offset], for exact ranges */
+  spans.forEach((s, i) => { const tn = s.firstChild && s.firstChild.nodeType === 3 && s.childNodes.length === 1 ? s.firstChild : null, raw = s.textContent;
+    for (let j = 0; j < raw.length; j++) { const t = norm(raw[j]); for (let k = 0; k < t.length; k++) { idx.push(i); cmap.push(tn ? [tn, j] : null); } full += t; } });
   mine.forEach((note, k) => {
     const q = norm(note.quote).slice(0, 400); if (!q) return;
     const at = full.indexOf(q); if (at < 0) return;
     const a = idx[at], b = idx[Math.min(at + q.length - 1, idx.length - 1)];
-    for (let i = a; i <= b; i++) spans[i].classList.add('hl');
-    const pin = document.createElement('button'); pin.className = 'pin' + (note.status === 'answered' ? '' : ' wait'); pin.textContent = note.status === 'answered' ? 'Q' : '…';
-    pin.title = 'Show the saved question and answer';
-    pin.style.top = (spans[a].offsetTop - 4) + 'px';
+    if (isMine(note)) { const cls = markClasses(note), ca = cmap[at], cb = cmap[Math.min(at + q.length - 1, cmap.length - 1)];
+      if (HL_OK && ca && cb) { const rng = document.createRange(); rng.setStart(ca[0], ca[1]); rng.setEnd(cb[0], cb[1] + 1); cls.forEach(k => (own[k] ||= []).push(rng)); }
+      else for (let i = a; i <= b; i++) { spans[i].classList.add(...cls); spans[i].setAttribute('data-nm', '1'); } }
+    else for (let i = a; i <= b; i++) spans[i].classList.add('hl');
+    const pin = document.createElement('button'); pin.className = 'pin' + (isMine(note) ? ' n' : (note.status === 'answered' ? '' : ' wait')); pin.textContent = isMine(note) ? 'N' : (note.status === 'answered' ? 'Q' : '…');
+    if (isMine(note)) pin.style.background = NOTE_COLORS[noteColor(note)][0];
+    pin.title = isMine(note) ? 'Show your note' : 'Show the saved question and answer';
+    const y0 = Math.round(spans[a].offsetTop / 6), nAt = stackAt.get(y0) || 0; stackAt.set(y0, nAt + 1);
+    pin.style.top = (spans[a].offsetTop - 4 + 26 * nAt) + 'px';
     pin.onclick = e => { e.stopPropagation(); showPop(note, pin); };
     sh.appendChild(pin);
   });
+  syncOwnHighlights();
 }
 function refreshHighlights() { state.shells.forEach(sh => { if (sh.dataset.done) applyHighlights(sh); }); if (state.view === 'md') applySummaryHighlights(); }
 function showPop(note, anchorEl) {
   const p = $('#pop'); const r = anchorEl.getBoundingClientRect(), sr = scrollEl.getBoundingClientRect();
-  p.innerHTML = `<div class="head" title="Drag to move · double-click to put it back by its pin"><span><span class="grip" aria-hidden="true">⋮⋮</span>Note</span><button class="x" title="Close" aria-label="Close">×</button></div>` + `<div class="popwhen">Asked ${esc(fmtWhen(note.asked_at))}${note.answered_at ? ' · answered ' + esc(fmtWhen(note.answered_at)) : ''}</div>` + `<div class="q" style="font-weight:600">Q: ${esc(note.question)}</div>` + (note.status === 'answered' ? `<p class="a">${esc(note.answer)}</p>` : `<p class="pending">Waiting for Claude…</p>`)
+  if (isMine(note)) p.innerHTML = `<div class="head" title="Drag to move · double-click to put it back by its pin"><span><span class="grip" aria-hidden="true">⋮⋮</span>My note</span><button class="x" title="Close" aria-label="Close">×</button></div>`
+    + `<div class="popwhen">Saved ${esc(fmtWhen(note.asked_at))}${note.updated_at ? ' · edited ' + esc(fmtWhen(note.updated_at)) : ''}</div>`
+    + (note.note ? `<p class="a">${esc(note.note)}</p>` : `<p class="pending" style="color:var(--muted)">${noteMark(note) === 'ul' ? 'Underline' : noteMark(note) === 'both' ? 'Highlight and underline' : 'Highlight'} only, no text.</p>`)
+    + `<p class="acts"><button data-edit="${esc(note.id)}" title="Change the text, colour or style">Edit</button><button class="del" data-del="${esc(note.id)}" title="Delete this note and its highlight">Delete note</button></p>`;
+  else p.innerHTML = `<div class="head" title="Drag to move · double-click to put it back by its pin"><span><span class="grip" aria-hidden="true">⋮⋮</span>Note</span><button class="x" title="Close" aria-label="Close">×</button></div>` + `<div class="popwhen">Asked ${esc(fmtWhen(note.asked_at))}${note.answered_at ? ' · answered ' + esc(fmtWhen(note.answered_at)) : ''}</div>` + `<div class="q" style="font-weight:600">Q: ${esc(note.question)}</div>` + (note.status === 'answered' ? `<p class="a">${esc(note.answer)}</p>` : `<p class="pending">Waiting for Claude…</p>`)
     + `<p class="acts"><button class="del" data-del="${esc(note.id)}" title="Delete this question and its answer">Delete note</button></p>`;
   armDelete(p.querySelector('button[data-del]'), note.id);
+  const eb = p.querySelector('button[data-edit]'); if (eb) eb.onclick = e => { e.stopPropagation(); hidePop(); openNoteBox(note); };
   p.querySelector('.x').onclick = hidePop;
   p.hidden = false;
   const place = () => {
@@ -805,7 +895,7 @@ function placeBar(rc) {
 }
 document.addEventListener('mouseup', onSelect); document.addEventListener('touchend', () => setTimeout(onSelect, 50));
 function onSelect(e) {
-  if (e && e.target && e.target.closest && e.target.closest('#ask,#selBar,#tr,#drawer,#bar,#pop')) return;
+  if (e && e.target && e.target.closest && e.target.closest('#ask,#nb,#selBar,#tr,#drawer,#bar,#pop')) return;
   const s = getSelection(); if (!s || s.isCollapsed) { hideAskBtn(); return; }
   const text = s.toString().replace(/\s+/g, ' ').trim();
   const r = s.getRangeAt(0); const startEl = (r.startContainer.nodeType === 1 ? r.startContainer : r.startContainer.parentElement);
@@ -829,7 +919,7 @@ askBtn.onclick = () => {
 if (CFG.research) { const rc = $('#researchChip'); rc.dataset.q = 'How could I apply this to my research (' + String(CFG.research).slice(0, 300) + ')?'; rc.hidden = false; }
 $('#presets').addEventListener('click', e => { const b = e.target.closest('button[data-q]'); if (!b) return; const t = $('#askText'); t.value = (t.value ? t.value + ' ' : '') + b.dataset.q; t.focus(); });
 $('#askCancel').onclick = hideAsk;
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { hideAsk(); hidePop(); hideTr(); $('#lightbox').hidden = true; } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { hideAsk(); hideNoteBox(); hidePop(); hideTr(); $('#lightbox').hidden = true; } });
 function hideAsk() { $('#ask').hidden = true; }
 
 /* drag the Ask and Translate boxes by their header; they stay where dropped until reload (double-click header = reset) */
@@ -865,6 +955,63 @@ function makeDraggable(box, handle, onReset) {
   });
 }
 makeDraggable($('#ask'), $('#ask .head'));
+
+/* the reader's own note: highlight and/or underline in one of six colours, with optional typed text. Saved in qa as kind 'note'. */
+const NB_STORE = 'paperReader.noteStyle';
+const nb = { sel: null, edit: null, mark: 'hl', color: 'yellow' };
+try { const s = JSON.parse(localStorage.getItem(NB_STORE) || 'null'); if (s && NOTE_COLORS[s.color]) nb.color = s.color; if (s && ['hl', 'ul', 'both'].includes(s.mark)) nb.mark = s.mark; } catch (e) {}
+$('#nbColors').innerHTML = Object.entries(NOTE_COLORS).map(([c, [solid]]) => `<button class="sw" data-color="${c}" style="background:${solid}" title="${c[0].toUpperCase() + c.slice(1)}" aria-label="${c}" aria-pressed="false"></button>`).join('');
+function paintNoteBox() {
+  const q = $('#nbQuote'); q.classList.toggle('hl', nb.mark !== 'ul'); q.classList.toggle('ul', nb.mark !== 'hl');
+  q.style.setProperty('--nc', NOTE_COLORS[nb.color][0]); q.style.setProperty('--ncs', NOTE_COLORS[nb.color][1]);
+  $('#nbTools').querySelectorAll('button[data-mark]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mark === 'hl' ? nb.mark !== 'ul' : nb.mark !== 'hl')));
+  $('#nbColors').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.color === nb.color)));
+}
+$('#nbTools').addEventListener('click', e => {
+  const m = e.target.closest('button[data-mark]'), c = e.target.closest('button[data-color]');
+  if (m) { let hl = nb.mark !== 'ul', ul = nb.mark !== 'hl';
+    if (m.dataset.mark === 'hl') hl = !hl; else ul = !ul;
+    if (!hl && !ul) { if (m.dataset.mark === 'hl') ul = true; else hl = true; }   /* one of the two always stays on */
+    nb.mark = hl && ul ? 'both' : hl ? 'hl' : 'ul'; }
+  if (c) nb.color = c.dataset.color;
+  if (m || c) { paintNoteBox(); try { localStorage.setItem(NB_STORE, JSON.stringify({ mark: nb.mark, color: nb.color })); } catch (err) {} }
+});
+function openNoteBox(existing) {
+  if (existing) { nb.edit = existing; nb.sel = null; nb.mark = noteMark(existing); nb.color = noteColor(existing); }
+  else { if (!state.sel) return; nb.edit = null; nb.sel = state.sel; }
+  const src = existing || nb.sel;
+  hideAskBtn(); hideAsk();
+  $('#nbTitle').textContent = existing ? 'Edit your note' : 'Note on this passage';
+  $('#nbQuote').firstElementChild.textContent = src.quote;
+  $('#nbWhere').textContent = docLabel(src.doc, src.page, src.section);
+  $('#nbText').value = existing ? (existing.note || '') : '';
+  $('#nbMsg').textContent = ''; $('#nbMsg').className = ''; $('#nbSave').disabled = false; $('#nbSave').textContent = existing ? 'Save changes' : 'Save note';
+  paintNoteBox(); $('#nb').hidden = false; clampBox($('#nb')); $('#nbText').focus({ preventScroll: true });
+}
+function hideNoteBox() { $('#nb').hidden = true; }
+$('#noteBtn').onclick = () => openNoteBox(null);
+$('#nbCancel').onclick = hideNoteBox;
+$('#nbText').addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); $('#nbSave').click(); } });
+$('#nbSave').onclick = async () => {
+  const msg = $('#nbMsg'), text = $('#nbText').value.trim().slice(0, 4000);
+  if (!nb.edit && !nb.sel) return;
+  $('#nbSave').disabled = true; msg.className = ''; msg.textContent = 'Saving…';
+  const db = await getDb();
+  if (!db) { msg.className = 'warn'; msg.textContent = 'Notes can only be saved when you are signed in to Claude. Open this page from the Claude app.'; $('#nbSave').disabled = false; return; }
+  try {
+    if (nb.edit) { const { id, ...data } = nb.edit;
+      await db.collection('qa').doc(id).set({ ...data, note: text, mark: nb.mark, color: nb.color, updated_at: new Date().toISOString() }); }
+    else { const sel = nb.sel;
+      await db.collection('qa').doc().set({ kind: 'note', doc: sel.doc, page: sel.page, section: sel.section || '', quote: sel.quote, ...(sel.ctx ? { anchor_ctx: sel.ctx } : {}),
+        note: text, mark: nb.mark, color: nb.color, asked_at: new Date().toISOString(), status: 'note' });
+      try { getSelection().removeAllRanges(); } catch (err) {} }
+    hideNoteBox(); toast(nb.edit ? 'Note updated.' : 'Note saved.');
+  } catch (e) {
+    msg.className = 'warn'; msg.textContent = 'Not saved (' + (e && e.code || 'error') + '). Your text is kept; press Save again.';
+    $('#nbSave').disabled = false;
+  }
+};
+makeDraggable($('#nb'), $('#nb .head'));
 /* the pin popup drags by its header; double-click puts it back beside its pin */
 (() => { const p = $('#pop'); p.addEventListener('pointerdown', e => { const h = e.target.closest('#pop .head'); if (!h || e.button !== 0 || e.target.closest('button')) return; const r = p.getBoundingClientRect(); p.style.left = r.left + 'px'; p.style.top = r.top + 'px'; p.style.right = p.style.bottom = 'auto'; const sx = e.clientX, sy = e.clientY, bx = r.left, by = r.top, id = e.pointerId; try { h.setPointerCapture(id); } catch (err) {} p.classList.add('dragging'); e.preventDefault();
   const mv = ev => { if (ev.pointerId !== id) return; const nx = Math.max(4, Math.min(bx + ev.clientX - sx, innerWidth - p.offsetWidth - 4)), ny = Math.max(4, Math.min(by + ev.clientY - sy, innerHeight - 48)); p.style.left = nx + 'px'; p.style.top = ny + 'px'; p.dataset.moved = '1'; };
@@ -873,7 +1020,7 @@ makeDraggable($('#ask'), $('#ask .head'));
   p.addEventListener('dblclick', e => { if (!e.target.closest('#pop .head') || e.target.closest('button')) return; delete p.dataset.moved; p._place && p._place(); });
 })();
 makeDraggable($('#tr'), $('#tr .head'), () => { if (tr.sel) placeTr(tr.sel.rc); });
-addEventListener('resize', () => { ['#ask', '#tr', '#pop'].forEach(s => { const b = $(s); if (!b.hidden) clampBox(b); }); });
+addEventListener('resize', () => { ['#ask', '#nb', '#tr', '#pop'].forEach(s => { const b = $(s); if (!b.hidden) clampBox(b); }); });
 
 /* translator: asks Claude directly from the page (sample capability); nothing is saved */
 const LANGS = [
@@ -1113,7 +1260,7 @@ $('#send').onclick = async () => {
   }, () => {}));
   db.collection('qa').orderBy('asked_at').onSnapshot(snap => {
     state.notes = snap.docs.filter(d => d.exists).map(d => ({ id: d.id, ...d.data() }));
-    const open = state.notes.filter(n => n.status !== 'answered').length;
+    const open = state.notes.filter(n => !isMine(n) && n.status !== 'answered').length;
     const c = $('#ncount'); c.textContent = open ? `${state.notes.length} · ${open} waiting` : state.notes.length; c.hidden = !state.notes.length;
     refreshHighlights(); if (state.drawerTab === 'notes') renderDrawer();
   }, () => {});
